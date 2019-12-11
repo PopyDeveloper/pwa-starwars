@@ -20,6 +20,19 @@ const isLocalhost = Boolean(
     )
 );
 
+var CACHE_NAME = 'data-sw';
+
+var urlsToCache = [
+    '/',
+    '/static/js/bundle.js',
+    '/static/js/main.chunk.js',
+    '/static/js/1.chunk.js',
+    '/static/js/0.chunk.js',
+    '/favicon.ico',
+    '/css?family=Open+Sans',
+    '/icon?family=Material+Icons'
+];
+
 export function register(config) {
   if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
@@ -50,6 +63,30 @@ export function register(config) {
         // Is not localhost. Just register service worker
         registerValidSW(swUrl, config);
       }
+    });
+
+    window.addEventListener('install', function (event) {
+      // Perform install steps
+      event.waitUntil(
+          caches.open(CACHE_NAME)
+              .then(function (cache) {
+                  return cache.addAll(urlsToCache);
+              })
+      );
+    });
+
+    window.addEventListener('fetch', function (event) {
+      console.info(event)
+      event.respondWith(
+          caches.match(event.request)
+              .then(function (response) {
+                  // Cache hit - return response
+                  return response || fetch(event.request);
+                })
+                .catch(() => {
+                  return caches.match('/offline/index.html');
+                })
+      );
     });
   }
 }
